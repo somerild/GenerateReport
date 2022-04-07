@@ -6,8 +6,26 @@ public class GenerateReport
 {
     public static void main(String[] args)
     {
-        String sourcePath; // data source file path
-        int numberOfRecords; //number of records in the data source
+        //variables for arguments from main
+        String sourcePath;
+        int numberOfRecords;
+
+        //variables for reading source file
+        String record;
+        String state;
+        int population;
+        int childPopulation;
+        int childPovertyPopulation;
+
+        //variables for calculating report totals
+        String[] stateCodes = {"01", "02", "04", "05", "06", "08", "09", "10", "11", "12", "13", "15", "16", "17", "18",
+                "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31", "32", "33", "34", "35",
+                "36", "37", "38", "39", "40", "41", "42", "44", "45", "46", "47", "48", "49", "50", "51", "53", "54",
+                "55", "56"};
+        int totalPopulation;
+        int totalChildPopulation;
+        int totalChildPovertyPopulation;
+        float percentChildPoverty;
 
         try
         {
@@ -33,36 +51,47 @@ public class GenerateReport
                 System.exit( 1 );
             }
 
-            try( BufferedReader input = new BufferedReader( new FileReader( fIn ) ) )
+            //print header to System.out
+            System.out.printf("%nFile: " + sourcePath + "%n");
+            System.out.printf("%n%5s %10s %16s %24s %15s%n", "State", "Population", "Child Population", "Child Poverty Population", "% Child Poverty");
+            System.out.printf("----- ---------- ---------------- ------------------------ ---------------%n");
+
+            for(int j = 0; j < stateCodes.length; j++)
             {
-                String record;
-                int[][] data = new int[numberOfRecords][4];
-                int population;
-                int childPopulation;
-                int childPovertyPopulation;
-
-                //print header to System.out
-                //System.out.printf("%nFile: " + sourcePath + "%n");
-                //System.out.printf("%n%5s %10s %16s %24s %15s%n", "State", "Population", "Child Population", "Child Poverty Population", "% Child Poverty");
-                //System.out.printf("----- ---------- ---------------- ------------------------ ---------------%n");
-
-                input.readLine(); //omit header
-
-                //loop through records to populate data Array
-                for(int i = 0; i < numberOfRecords; i++)
+                try( BufferedReader input = new BufferedReader( new FileReader( fIn ) ) )
                 {
-                    record = input.readLine();
-                    data[i][0] = Integer.parseInt(record.substring(0,5).trim()); //state
-                    data[i][1] = Integer.parseInt(record.substring( 6, 16 ).trim()); //population
-                    data[i][2] = Integer.parseInt(record.substring( 17, 33 ).trim()); //childPopulation
-                    data[i][3] = Integer.parseInt(record.substring( 34, 58 ).trim()); //childPovertyPopulation
+                    //reset totals for next state
+                    totalPopulation = 0;
+                    totalChildPopulation = 0;
+                    totalChildPovertyPopulation = 0;
+                    percentChildPoverty = 0;
+
+                    for(int i = 0; i < numberOfRecords; i++)
+                    {
+                        record = input.readLine();
+                        state = record.substring(0,5).trim();
+
+                        if(state.equals(stateCodes[j]))
+                        {
+                            //read in values for each line
+                            population = Integer.parseInt(record.substring( 6, 16 ).trim());
+                            childPopulation = Integer.parseInt(record.substring( 17, 33 ).trim());
+                            childPovertyPopulation = Integer.parseInt(record.substring( 34, 58 ).trim());
+
+                            //accumulate values into totals
+                            totalPopulation += population;
+                            totalChildPopulation += childPopulation;
+                            totalChildPovertyPopulation += childPovertyPopulation;
+                        }
+                    }
+                    percentChildPoverty = ((float)totalChildPovertyPopulation / (float)totalChildPopulation)*100;
+                    System.out.printf("%5s %,10d %,16d %,24d %,15.2f%n", stateCodes[j], totalPopulation, totalChildPopulation, totalChildPovertyPopulation, percentChildPoverty);
                 }
-                System.out.println(data[0][0] + " " + data[0][1] + " " + data[0][2] + " " + data[0][3]);
-            }
-            catch(IOException e1)
-            {
-                e1.printStackTrace();
-                System.exit( 1 );
+                catch(IOException e1)
+                {
+                    e1.printStackTrace();
+                    System.exit( 1 );
+                }
             }
         }
         catch ( IllegalArgumentException e0 )
